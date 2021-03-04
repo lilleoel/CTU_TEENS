@@ -1,0 +1,121 @@
+---
+title: "Stastical report for TEENS feasibility trial"
+subtitle: "Using simulated data"
+author: "Olsen MH"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+   pdf_document:
+    toc: yes
+    toc_depth: '2'
+
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+source("functions.R")
+
+screened <- 100
+n <- 30
+source("sim_data.R")
+
+```
+
+\newpage
+# Table 1 - Baseline characteristics
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+kable(tbl1_func(df,
+                c("age"), # <- Cont variables
+                c("gender"), # <- Cat variables
+                "group"),row.names = F)
+
+```
+
+\newpage
+# Feasibility outcomes
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 4.5, fig.width = 7, fig.align = "center"}
+
+f1 <- prop.test(sum(df$f_completed_questionaires),n)
+f1a <- ggplot() + geom_point(aes(x=1,y=f1$estimate)) + geom_errorbar(aes(x=1,ymin=f1$conf.int[1],ymax=f1$conf.int[2])) +
+   ggtitle("A) Completion of follow-up") +
+   annotate("rect", xmin = -Inf,xmax = Inf,ymin = -Inf,ymax = 0.75, 
+            fill = "red", color=NA, alpha = 0.1) +
+   annotate("rect", xmin = -Inf,xmax = Inf,ymin = 0.75,ymax = Inf,
+            fill = "green",color=NA,  alpha = 0.1) +
+   scale_y_continuous(labels = function(x) paste0(x*100, "%"), limits = c(0,1)) +
+   theme_classic() + theme(axis.title.y = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line = element_blank(), plot.title.position = "panel") + coord_flip() 
+
+f2 <- prop.test(n,screened)
+f2a <- ggplot() + geom_point(aes(x=1,y=f2$estimate)) + geom_errorbar(aes(x=1,ymin=f2$conf.int[1],ymax=f2$conf.int[2])) +
+   ggtitle("B) The fraction of eligible participants who consent to inclusion and randomization") +
+   annotate("rect", xmin = -Inf,xmax = Inf,ymin = -Inf,ymax = 0.29, 
+            fill = "red", color=NA, alpha = 0.1) +
+   annotate("rect", xmin = -Inf,xmax = Inf,ymin = 0.29,ymax = Inf,
+            fill = "green",color=NA,  alpha = 0.1) +
+   scale_y_continuous(labels = function(x) paste0(x*100, "%"), limits = c(0,1)) +
+   theme_classic() + theme(axis.title.y = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line = element_blank(), plot.title.position = "panel") + coord_flip() 
+
+f3 <- prop.test(sum((df$f_compliance == 1)*1, na.rm=T),sum(!is.na(df$f_compliance)*1))
+f3a <- ggplot() + geom_point(aes(x=1,y=f3$estimate)) + geom_errorbar(aes(x=1,ymin=f3$conf.int[1],ymax=f3$conf.int[2])) +
+   ggtitle("C) Compliance") +
+   annotate("rect", xmin = -Inf,xmax = Inf,ymin = -Inf,ymax = 0.50, 
+            fill = "red", color=NA, alpha = 0.1) +
+   annotate("rect", xmin = -Inf,xmax = Inf,ymin = 0.50,ymax = Inf,
+            fill = "green",color=NA,  alpha = 0.1) +
+   scale_y_continuous(labels = function(x) paste0(x*100, "%"), limits = c(0,1)) +
+   theme_classic() + theme(axis.title.y = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line = element_blank(), plot.title.position = "panel") + coord_flip() 
+
+grid.arrange(f1a,f2a,f3a)
+
+ft <- data.frame(rbind(
+         c("A",as.numeric(f1$estimate),as.numeric(f1$conf.int[1]),as.numeric(f1$conf.int[2])),
+         c("B",as.numeric(f2$estimate),as.numeric(f2$conf.int[1]),as.numeric(f2$conf.int[2])),
+         c("C",as.numeric(f3$estimate),as.numeric(f3$conf.int[1]),as.numeric(f3$conf.int[2]))
+      ))
+
+ft[[2]] <- as.numeric(ft[[2]])
+ft[[3]] <- as.numeric(ft[[3]])
+ft[[4]] <- as.numeric(ft[[4]])
+
+ft[,c(2:ncol(ft))] <- round(ft[,c(2:ncol(ft))],digits=3)
+
+kable(ft, col.names = c("Outcome","Fraction", "LCL", "UCL"), row.names = FALSE)
+
+
+```
+
+\newpage
+# Exploratory clinical outcomes
+
+## DSHI-Y (primary)
+
+DSHI-Y was assessed every week for 
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
+fig_qqhist(df,"p_dshiy_0")
+fig_long(df,"norm")
+
+hello <- lin_mixed(df,"dshiy")
+
+summary(hello$mixed_model)
+```
+
+
+\newpage
+## Kidscreen-10 (secondary)
+
+## DASS-21 (secondary)
+
+## DERS-16 (further)
+
+\newpage
+# Normality
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
+fig_qqhist(df,"age")
+
+
+```
