@@ -1,17 +1,20 @@
 ---
 title: "Stastical report for TEENS feasibility trial"
-subtitle: "Using simulated data"
 author: "Olsen MH"
 date: "`r format(Sys.time(), '%d %B %Y')`"
-output: 
-   pdf_document:
+output:
+  pdf_document:
     toc: yes
-    toc_depth: '2'
-
+    toc_depth: '3'
+  word_document:
+    toc: yes
+    toc_depth: '3'
+subtitle: Using simulated data
 ---
 
 ```{r setup, include=FALSE}
 library(knitr)
+library(kableExtra)
 source("functions.R")
 
 screened <- 100
@@ -24,64 +27,29 @@ source("sim_data.R")
 # Table 1 - Baseline characteristics
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+df$dem_age[4] <- NA
 
-kable(tbl1_func(df,
-                c("age"), # <- Cont variables
-                c("gender"), # <- Cat variables
-                "group"),row.names = F)
+tbl1_func(df,c("dem_age"), c("dem_gender","dem_nationality","dem_school","dem_parents"), "group")
 
 ```
 
 \newpage
 # Feasibility outcomes
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 4.5, fig.width = 7, fig.align = "center"}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 3, fig.width = 7, fig.align = "center"}
 
-f1 <- prop.test(sum(df$f_completed_questionaires),n)
-f1a <- ggplot() + geom_point(aes(x=1,y=f1$estimate)) + geom_errorbar(aes(x=1,ymin=f1$conf.int[1],ymax=f1$conf.int[2])) +
-   ggtitle("A) Completion of follow-up") +
-   annotate("rect", xmin = -Inf,xmax = Inf,ymin = -Inf,ymax = 0.75, 
-            fill = "red", color=NA, alpha = 0.1) +
-   annotate("rect", xmin = -Inf,xmax = Inf,ymin = 0.75,ymax = Inf,
-            fill = "green",color=NA,  alpha = 0.1) +
-   scale_y_continuous(labels = function(x) paste0(x*100, "%"), limits = c(0,1)) +
-   theme_classic() + theme(axis.title.y = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line = element_blank(), plot.title.position = "panel") + coord_flip() 
+f1 <- feasibility_outcome(sum(df$f_completed_questionaires), n, "A) Completion of follow-up", 0.75)
+f2 <- feasibility_outcome(n, screened, "B) Eligible participants who consent to inclusion and randomization", 0.29)
+f3 <- feasibility_outcome(sum(df$f_compliance, na.rm=T), n/2, "C) Compliance", 0.51)
 
-f2 <- prop.test(n,screened)
-f2a <- ggplot() + geom_point(aes(x=1,y=f2$estimate)) + geom_errorbar(aes(x=1,ymin=f2$conf.int[1],ymax=f2$conf.int[2])) +
-   ggtitle("B) The fraction of eligible participants who consent to inclusion and randomization") +
-   annotate("rect", xmin = -Inf,xmax = Inf,ymin = -Inf,ymax = 0.29, 
-            fill = "red", color=NA, alpha = 0.1) +
-   annotate("rect", xmin = -Inf,xmax = Inf,ymin = 0.29,ymax = Inf,
-            fill = "green",color=NA,  alpha = 0.1) +
-   scale_y_continuous(labels = function(x) paste0(x*100, "%"), limits = c(0,1)) +
-   theme_classic() + theme(axis.title.y = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line = element_blank(), plot.title.position = "panel") + coord_flip() 
+grid.arrange(f1$fig,f2$fig,f3$fig,ncol=1)
 
-f3 <- prop.test(sum((df$f_compliance == 1)*1, na.rm=T),sum(!is.na(df$f_compliance)*1))
-f3a <- ggplot() + geom_point(aes(x=1,y=f3$estimate)) + geom_errorbar(aes(x=1,ymin=f3$conf.int[1],ymax=f3$conf.int[2])) +
-   ggtitle("C) Compliance") +
-   annotate("rect", xmin = -Inf,xmax = Inf,ymin = -Inf,ymax = 0.50, 
-            fill = "red", color=NA, alpha = 0.1) +
-   annotate("rect", xmin = -Inf,xmax = Inf,ymin = 0.50,ymax = Inf,
-            fill = "green",color=NA,  alpha = 0.1) +
-   scale_y_continuous(labels = function(x) paste0(x*100, "%"), limits = c(0,1)) +
-   theme_classic() + theme(axis.title.y = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.line = element_blank(), plot.title.position = "panel") + coord_flip() 
+ft <- rbind(
+   c(f1$name,f1$perc_requirement,f1$perc_mean,f1$perc_lcl,f1$perc_ucl),
+   c(f2$name,f2$perc_requirement,f2$perc_mean,f2$perc_lcl,f2$perc_ucl),
+   c(f3$name,f3$perc_requirement,f3$perc_mean,f3$perc_lcl,f3$perc_ucl))
 
-grid.arrange(f1a,f2a,f3a)
-
-ft <- data.frame(rbind(
-         c("A",as.numeric(f1$estimate),as.numeric(f1$conf.int[1]),as.numeric(f1$conf.int[2])),
-         c("B",as.numeric(f2$estimate),as.numeric(f2$conf.int[1]),as.numeric(f2$conf.int[2])),
-         c("C",as.numeric(f3$estimate),as.numeric(f3$conf.int[1]),as.numeric(f3$conf.int[2]))
-      ))
-
-ft[[2]] <- as.numeric(ft[[2]])
-ft[[3]] <- as.numeric(ft[[3]])
-ft[[4]] <- as.numeric(ft[[4]])
-
-ft[,c(2:ncol(ft))] <- round(ft[,c(2:ncol(ft))],digits=3)
-
-kable(ft, col.names = c("Outcome","Fraction", "LCL", "UCL"), row.names = FALSE)
+kable(ft, col.names = c("Outcome","Requirement","Fraction", "LCL", "UCL"), row.names = FALSE,format = "latex", booktabs = T, linesep = "") %>% kable_styling(latex_options = "hold_position")
 
 
 ```
@@ -90,32 +58,343 @@ kable(ft, col.names = c("Outcome","Fraction", "LCL", "UCL"), row.names = FALSE)
 # Exploratory clinical outcomes
 
 ## DSHI-Y (primary)
-
-DSHI-Y was assessed every week for 
+DSHI-Y will be filled out in both groups at baseline and follow-up, and during the intervention for the interventional group. DSHI-Y reflects the number of episodes of NSSI events. The results will be presented as one score. 
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
-fig_qqhist(df,"p_dshiy_0")
-fig_long(df,"norm")
 
-hello <- lin_mixed(df,"dshiy")
+kableone(tbl_cont_func(df,"p_dshiy"),
+         caption="Summarised results")
+result <- lin_reg(df,"p_dshiy")
 
-summary(hello$mixed_model)
+fig_lin_assumptions(result, name="DSHI-Y")
+
+fig_num_cont(df, "p_dshiy", "weeks", "DSHI-Y","mean")
+
+temp <- rbind(
+   c("DSHI-Y", result$lin_p))
+colnames(temp) <- c("","p-value")
+
+kable(temp, caption = "Linear regression")
+
 ```
 
 
 \newpage
 ## Kidscreen-10 (secondary)
+Kidscreen-10 will be filled out in both groups at baseline and follow-up. Kidscreen-10 has 10 questions where each question generates a score from 1 to 5. The results will be processed using the algorithm below:
 
-## DASS-21 (secondary)
+* *RASCH PP* =  ( 10 = -4.327 ) / ( 11 = -3.206 ) / ( 12 = -2.675 ) / ( 13 = -2.319 ) / ( 14 = -2.049 ) / ( 15 = -1.831 ) / ( 16 = -1.645 ) / ( 17 = -1.483 ) / ( 18 = -1.339 ) / ( 19 = -1.207 ) / ( 20 = -1.085 ) / ( 21 = -0.971 ) / ( 22 = -0.863 ) / ( 23 = -0.760 ) / ( 24 = -0.660 ) / ( 25 = -0.563 ) / ( 26 = -0.468 ) / ( 27 = -0.374 ) / ( 28 = -0.281 ) / ( 29 = -0.187 ) / ( 30 = -0.093 ) / ( 31 = 0.002 ) / ( 32 = 0.100 ) / ( 33 = 0.199 ) / ( 34 = 0.302 ) / ( 35 = 0.409 ) / ( 36 = 0.520 ) / ( 37 = 0.637 ) / ( 38 = 0.760 ) / ( 39 = 0.891 ) / ( 40 = 1.031 ) / ( 41 = 1.183 ) / ( 42 = 1.348 ) / ( 43 = 1.529 ) / ( 44 = 1.732 ) / ( 45 = 1.961 ) / ( 46 = 2.226 ) / ( 47 = 2.545 ) / ( 48 = 2.951 ) / ( 49 = 3.533 ) / ( 50 = 4.703 )
 
-## DERS-16 (further)
+*(points = sub-score)*
 
-\newpage
-# Normality
+The results are presented using two indexes:
+
+* **General HRQoL index** = RASCH PP
+* **General HRQoL index international T-values** = (((RASCH PP - 1.2078) / 1.03377) * 10 + 50)
+
+### Results
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
-fig_qqhist(df,"age")
 
+kableone(tbl_cont_func(df,"kidscreen10_HRQoL"),
+         caption="Summarised results")
+result_a <- lin_reg(df,"kidscreen10_HRQoL_")
+result_b <- lin_reg(df,"kidscreen10_HRQoLt_")
+
+fig_lin_assumptions(result_a, name="General HRQoL index")
+fig_lin_assumptions(result_b, name="General HRQoL index international T-values")
+
+fig_num_cont(df, "kidscreen10_HRQoL_", "weeks", "Kidscreen-10 \n (HRQoL index)","mean")
+fig_num_cont(df, "kidscreen10_HRQoLt_", "weeks", "Kidscreen-10 \n (T-values)","mean")
+
+temp <- rbind(
+   c("General HRQoL index", result_a$lin_p),
+   c("General HRQoL index international T-values", result_b$lin_p))
+colnames(temp) <- c("","p-value")
+
+kable(temp, caption = "Linear regression")
+
+```
+
+\newpage
+## DASS-21 (secondary)
+DASS-21 will be filled out in both groups at baseline and follow-up. DASS-21 has 21 questions where each question generates a score from 0 to 3. The results will be presented as sum-score for three scales: 
+
+* **Depression** = Q3 + Q5 + Q10 + Q13 + Q16 + Q17 + Q21
+* **Anxiety** = Q2 + Q4 + Q7 + Q9 + Q15 + Q19 + Q20
+* **Stress** = Q1 + Q6 + Q8 + Q11 + Q12 + Q14 + Q18
+
+*Q: Question*
+
+### Results
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
+
+kableone(tbl_cont_func(df,"s_dass21"),
+         caption="Summarised results")
+result_d <- lin_reg(df,"s_dass21_depression")
+result_a <- lin_reg(df,"s_dass21_anxiety")
+result_s <- lin_reg(df,"s_dass21_stress")
+
+fig_lin_assumptions(result_d, name="Depression")
+fig_lin_assumptions(result_a, name="Anxiety")
+fig_lin_assumptions(result_s, name="Stress")
+
+fig_num_cont(df, "s_dass21_depression", "weeks", "DASS-21 \n (Depression)","mean")
+fig_num_cont(df, "s_dass21_anxiety", "weeks", "DASS-21 \n (Anxiety)","mean")
+fig_num_cont(df, "s_dass21_stress", "weeks", "DASS-21 \n (Stress)","mean")
+
+temp <- rbind(
+   c("Depression", result_d$lin_p),
+   c("Anxiety", result_a$lin_p),
+   c("Stress", result_s$lin_p))
+colnames(temp) <- c("","p-value")
+
+kable(temp, caption = "Linear regression")
+
+```
+
+\newpage
+## DERS-16 (further)
+DERS-16 will be filled out in both groups at baseline and follow-up, and every week during the intervention for the interventional group. DERS-16 has 16 questions where each question generates a score from 1 to 5. The results will be presented as one sum-score. 
+
+### Results
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
+
+kableone(tbl_cont_func(df,"e_ders16"),
+         caption="Summarised results")
+result <- lin_reg(df,"e_ders16")
+
+fig_lin_assumptions(result, name="DERS-16")
+
+fig_num_cont(df, "e_ders16", "weeks", "DERS-16","mean")
+
+temp <- rbind(
+   c("DERS-16", result$lin_p))
+colnames(temp) <- c("","p-value")
+
+kable(temp, caption = "Linear regression")
+
+```
+
+\newpage
+## BSL-supplement (further)
+BSL-supplement will be filled out in both groups at baseline and follow-up, and every week during the intervention for the interventional group. BSL-supplement has 11 questions where each question generates a score from 0 to 4. The results will be presented as one sum-score. 
+
+### Results
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
+
+kableone(tbl_cont_func(df,"e_bsl"),
+         caption="Summarised results")
+result <- lin_reg(df,"e_bsl")
+
+fig_lin_assumptions(result, name="BSL-supplement")
+
+fig_num_cont(df, "e_bsl", "weeks", "BSL-supplement","mean")
+
+temp <- rbind(
+   c("BSL-supplement", result$lin_p))
+colnames(temp) <- c("","p-value")
+
+kable(temp, caption = "Linear regression")
+
+```
+
+\newpage
+## C-SSRS (further / UNFINISHED)
+C-SSRS will be filled out in both groups at baseline and follow-up, and every week during the intervention for the interventional group. C-SSRS has 16 questions where each question generates different score. The results will be presented as sum-scores for three scales:
+
+* **Ideation** = Q1a + Q1b + Q1c + Q1d + Q1e?
+* **Severity** = Q2a + Q2b + Q2c + Q2d?
+* **Behaviour** = Q3 + Q4 + Q5a + ?
+
+
+\newpage
+## CCNES-APP (further)
+CCNES-APP will be filled out in both groups only at follow-up. CCNES-APP has 9 main questions with 6 subquestions (a to f) for each. Each subquestion genertes a score from 1 to 7. The results will be presented as mean-score for six scales:  
+
+* **Distress reaction** = ( Q1a + Q2d + Q3f + Q4d + Q5a + Q6b + Q7f + Q8a + Q9d ) / 9
+* **Punitive reactions** = ( Q1e + Q2f + Q3b + Q4c + Q5e + Q6c + Q7b + Q8e + Q9c ) / 9
+* **Expressive encouragment** = ( Q1b + Q2c + Q3e + Q4f + Q5b + Q6d + Q7e + Q8b + Q9e ) / 9
+* **Emotion-focused reactions** = ( Q1c + Q2b + Q3c + Q4a + Q5c + Q6f + Q7d + Q8c + Q9a ) / 9
+* **Problem-focused reactions** = ( Q1f + Q2e + Q3a + Q4b + Q5f + Q6e + Q7a + Q8f + Q9b ) / 9
+* **Minimization reactions** = ( Q1d + Q2a + Q3d + Q4e + Q5d + Q6a + Q7c + Q8d + Q9f ) / 9
+
+*Q: Question*
+
+### Results
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
+
+kableone(tbl_cont_func(df,"e_ccnesapp"),
+         caption="Summarised results")
+result_di <- MWU_test(df,"e_ccnesapp_distress")
+result_pu <- MWU_test(df,"e_ccnesapp_punitive")
+result_ex <- MWU_test(df,"e_ccnesapp_expressive")
+result_em <- MWU_test(df,"e_ccnesapp_emotion")
+result_pr <- MWU_test(df,"e_ccnesapp_problem")
+result_mi <- MWU_test(df,"e_ccnesapp_minimization")
+
+temp <- rbind(
+   c("Distress reaction", result_di$est_ci, result_di$p),
+   c("Punitive reactions", result_pu$est_ci, result_pu$p),
+   c("Expressive encouragment", result_ex$est_ci, result_ex$p),
+   c("Emotion-focused reactions", result_em$est_ci, result_em$p),
+   c("Problem-focused reactions", result_pr$est_ci, result_pr$p),
+   c("Minimization reactions", result_mi$est_ci, result_mi$p))
+colnames(temp) <- c("","Estimate (95% Confidence interval)","p-value")
+
+kable(temp, caption = "Mann-Whitney U test")
+
+```
+
+\newpage
+## CCNES-A (further)
+CCNES-A will be filled out in both groups at baseline and follow-up. CCNES-A has 9 main questions with 6 subquestions (a to f) for each. Each subquestion genertes a score from 1 to 7. The results will be presented as mean-score for six scales:  
+
+* **Distress reaction** = ( Q1a + Q2d + Q3f + Q4d + Q5a + Q6b + Q7f + Q8a + Q9d ) / 9
+* **Punitive reactions** = ( Q1e + Q2f + Q3b + Q4c + Q5e + Q6c + Q7b + Q8e + Q9c ) / 9
+* **Expressive encouragment** = ( Q1b + Q2c + Q3e + Q4f + Q5b + Q6d + Q7e + Q8b + Q9e ) / 9
+* **Emotion-focused reactions** = ( Q1c + Q2b + Q3c + Q4a + Q5c + Q6f + Q7d + Q8c + Q9a ) / 9
+* **Problem-focused reactions** = ( Q1f + Q2e + Q3a + Q4b + Q5f + Q6e + Q7a + Q8f + Q9b ) / 9
+* **Minimization reactions** = ( Q1d + Q2a + Q3d + Q4e + Q5d + Q6a + Q7c + Q8d + Q9f ) / 9
+
+*Q: Question*
+
+### Results
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
+
+kableone(tbl_cont_func(df,"e_ccnesa_"),
+         caption="Summarised results")
+result_di <- MWU_test(df,"e_ccnesa_distress")
+result_pu <- MWU_test(df,"e_ccnesa_punitive")
+result_ex <- MWU_test(df,"e_ccnesa_expressive")
+result_em <- MWU_test(df,"e_ccnesa_emotion")
+result_pr <- MWU_test(df,"e_ccnesa_problem")
+result_mi <- MWU_test(df,"e_ccnesa_minimization")
+
+temp <- rbind(
+   c("Distress reaction", result_di$est_ci, result_di$p),
+   c("Punitive reactions", result_pu$est_ci, result_pu$p),
+   c("Expressive encouragment", result_ex$est_ci, result_ex$p),
+   c("Emotion-focused reactions", result_em$est_ci, result_em$p),
+   c("Problem-focused reactions", result_pr$est_ci, result_pr$p),
+   c("Minimization reactions", result_mi$est_ci, result_mi$p))
+colnames(temp) <- c("","Estimate (95% Confidence interval)","p-value")
+
+kable(temp, caption = "Mann-Whitney U test")
+
+```
+
+\newpage
+## NEQ (further / UNFINISHED)
+NEQ will be filled out in both groups only at follow-up. NEQ has 20 questions, where every question has 5 sub-question. The results will be presented as sum, mean and standard deviations: 
+
+* **Frequency negative effects** = Q1a + Q2a + Q3a + Q4a + Q5a + Q6a + Q7a + Q8a + Q9a + Q10a + Q11a + Q12a + Q13a + Q14a + Q15a + Q16a + Q17a + Q18a + Q19a + Q20a *(Score from 0 to 1)*
+* **Frequency negative effects from treatment** = Q1c + Q2c + Q3c + Q4c + Q5c + Q6c + Q7c + Q8c + Q9c + Q10c + Q11c + Q12c + Q13c + Q14c + Q15c + Q16c + Q17c + Q18c + Q19c + Q20c *(Score from 0 to 1)*
+* **Frequency negative effects from other circumstances** = Frequency negative effects - Frequency negative effects from treatment
+
+
+* **Frequency Factor 1 (Symptoms) from treatment** = ...
+* **Frequency Factor 2 (Quality) from treatment**	= ...
+* **Frequency Factor 3 (Dependency) from treatment** = ...
+* **Frequency Factor 4 (Stigma) from treatment** = ...
+* **Frequency Factor 5 (Hopelessness) from treatment** = ...
+
+
+\newpage
+## WAI-SR (further)
+WAI-SR will be filled out in both groups at baseline and follow-up, and every week during the intervention for the interventional group. WAI-SR has 12 questions where each question generates a score from 1 to 7. The results will be presented as one sum-score. 
+
+### Results
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
+
+kableone(tbl_cont_func(df,"e_waisr"),
+         caption="Summarised results")
+result <- lin_reg(df,"e_waisr")
+
+fig_lin_assumptions(result, name="WAI-SR")
+
+fig_num_cont(df, "e_waisr", "weeks", "WAI-SR","mean")
+
+temp <- rbind(
+   c("WAI-SR", result$lin_p))
+colnames(temp) <- c("","p-value")
+
+kable(temp, caption = "Linear regression")
+
+```
+
+\newpage
+## SDQ (further)
+SDQ will be filled out in both groups only at baseline. SDQ has 30 questions where the 25 first will be included for calculation. Each of these question generates a score from 0 to 2. The results will be presented as sum-score for 7 scales, and the total sum-score:  
+
+* **Prosocial** = Q1 + Q4 + Q9 + Q17 + Q20
+* **Emotion** = Q3 + Q8 + Q13 + Q16 + Q24
+* **ADHD** = Q2 + Q10 + Q15 + ( 2 - Q21 ) + ( 2 - Q25 )
+* **CD** = Q5 + ( 2 - Q7 ) + Q12 + Q18 + Q22
+* **Companion** = Q6 + ( 2 - Q11 ) + ( 2 - Q14 ) + Q19 + Q23
+
+* **Externalising** = CD + ADHD
+* **Internalising** = Emotion + Companion
+* **Sum** = Emotion + ADHD + Companion + CD
+
+### Results
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
+
+kableone(tbl_cont_func(df,"e_sdq"),
+         caption="Summarised results")
+result_prosocial <- MWU_test(df,"e_sdq_prosocial")
+result_emotion <- MWU_test(df,"e_sdq_emotion")
+result_adhd <- MWU_test(df,"e_sdq_adhd")
+result_cd <- MWU_test(df,"e_sdq_cd")
+result_companion <- MWU_test(df,"e_sdq_companion")
+result_externalising <- MWU_test(df,"e_sdq_externalising")
+result_internalising <- MWU_test(df,"e_sdq_interalising")
+result_sum <- MWU_test(df,"e_sdq_sum")
+
+temp <- rbind(
+   c("Prosocial", result_prosocial$est_ci, result_prosocial$p),
+   c("Emotion", result_emotion$est_ci, result_emotion$p),
+   c("ADHD", result_adhd$est_ci, result_adhd$p),
+   c("CD", result_cd$est_ci, result_cd$p),
+   c("Companion", result_companion$est_ci, result_companion$p),
+   c("Externalising", result_externalising$est_ci, result_externalising$p),
+   c("Internalising", result_internalising$est_ci, result_internalising$p),
+   c("Sum", result_sum$est_ci, result_sum$p))
+colnames(temp) <- c("","Estimate (95% Confidence interval)","p-value")
+
+kable(temp, caption = "Mann-Whitney U test")
+
+```
+
+\newpage
+## ECR-RC (further)
+ECR-RC will be filled out in both groups only at baseline. ECR-RC has 12 questions where each of these question generates a score from 1 to 7. The results will be presented as sum-score for two scales:  
+
+* **Anxiety items** = ( Q1 + Q2 + Q3 + Q4 + Q5 + Q6 ) / 6
+* **Avoidance items** = ( Q7 + Q8 + Q9 + ( 8 - Q10 ) + ( 8 - Q11 ) + ( 8 - Q12 ) ) / 6
+
+### Results
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
+
+kableone(tbl_cont_func(df,"e_ecrrc"),
+         caption="Summarised results")
+result_anxiety <- MWU_test(df,"e_ecrrc_anxiety")
+result_avoidance <- MWU_test(df,"e_ecrrc_avoidance")
+
+
+temp <- rbind(
+   c("Anxiety items", result_anxiety$est_ci, result_anxiety$p),
+   c("Avoidance items", result_avoidance$est_ci, result_avoidance$p))
+colnames(temp) <- c("","Estimate (95% Confidence interval)","p-value")
+
+kable(temp, caption = "Mann-Whitney U test")
 
 ```
