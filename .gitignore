@@ -1,3 +1,8 @@
+#FIND DATA
+import_data.R
+test_data.csv
+log_to_RR.csv
+
 # History files
 .Rhistory
 .Rapp.history
