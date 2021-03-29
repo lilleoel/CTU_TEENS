@@ -1,6 +1,5 @@
 ---
 title: "Statistical report for TEENS feasibility trial"
-author: "Olsen MH, Morthorst B, Pagsberg AK, "
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   pdf_document:
@@ -43,7 +42,7 @@ tbl1_func(df,c("Age"),c("Gender","Nationality","School","Parental status"),"grou
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 3, fig.width = 7, fig.align = "center"}
 
 f1 <- feasibility_outcome(sum(df$`Completion of follow-up`), n, "A) Completion of follow-up", 0.75)
-f2 <- feasibility_outcome(n, screened, "B) Eligible participants who consent to inclusion and randomization", 0.29)
+f2 <- feasibility_outcome(n, screened, "B) Eligible participants who consent to inclusion and randomisation", 0.29)
 f3 <- feasibility_outcome(sum(df$Compliance, na.rm=T), n/2, "C) Compliance", 0.51)
 
 grid.arrange(f1$fig,f2$fig,f3$fig,ncol=1)

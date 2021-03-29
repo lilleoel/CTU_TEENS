@@ -7,9 +7,9 @@ df$group <- var_rand(n,2)
 #Baseline variables ----
    df$`Gender` <- var_categories(n,c("Male","Female","Transgender","Other"))
    df$`Age` <- var_beta(n,13,17,"right")
-   df$`Nationality` <- var_categories(n,c("Danish","European/American","Middle Eastern","Other"))
+   df$`Nationality` <- var_categories(n,c("Danish","European/North American","Middle Eastern","Other"))
    df$`School` <- var_categories(n,c("Middle-school","High-school","Boarding school","No school","Other"))
-   df$`Parental status` <- var_categories(n,c("Married","Divorced","Other"))
+   df$`Parental status` <- var_categories(n,c("Married","Divorced","Cohabitant","Other"))
    
    
 #Feasibility outcomes
