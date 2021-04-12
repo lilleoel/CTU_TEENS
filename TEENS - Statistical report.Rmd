@@ -2,14 +2,14 @@
 title: "Statistical report for TEENS feasibility trial"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
-  pdf_document:
+  word_document:
     toc: yes
     toc_depth: '2'
   html_document:
     df_print: paged
     toc: yes
     toc_depth: '2'
-  word_document:
+  pdf_document:
     toc: yes
     toc_depth: '2'
 subtitle: Using simulated data
