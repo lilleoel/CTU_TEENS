@@ -33,7 +33,7 @@
 
 ##### DSHI-Y (awaiting, updated) ##### 
 df_dshiy <- df_raw[df_raw$`Participant Id` < 400,grepl("Participant Id|DSHICANDI",colnames(df_raw))]
-df_dshiy[,c(2:ncol(df_dshiy))] <- lapply(df_dshiy[,c(2:ncol(df_dshiy))], as.numeric)
+suppressWarnings(df_dshiy[,c(2:ncol(df_dshiy))] <- lapply(df_dshiy[,c(2:ncol(df_dshiy))], as.numeric))
    
 df_dshiy_base <- df_dshiy[!is.na(df_dshiy$DSHICANDI_1_SCREEN),grepl("Participant Id|a_spec_SCREEN",colnames(df_dshiy))]
 df_dshiy_fu <- df_dshiy[!is.na(df_dshiy$`DSHICANDI follo_1_FU`),grepl("Participant Id|a_spec_FU",colnames(df_dshiy))]
@@ -80,8 +80,8 @@ kidscreen_conversion <- data.frame(rbind(
          c(50,4.703),c(NA,NA) ))
 
 for(i in 1:nrow(df)){
-   df$`Kidscreen-10 (baseline)`[i] <- kidscreen_conversion[kidscreen_conversion[,1] == df$`Kidscreen-10 (baseline)`[i],2]
-   df$`Kidscreen-10 (follow-up)`[i] <- kidscreen_conversion[kidscreen_conversion[,1] == df$`Kidscreen-10 (follow-up)`[i],2]
+   suppressWarnings(df$`Kidscreen-10 (baseline)`[i] <- kidscreen_conversion[kidscreen_conversion[,1] == df$`Kidscreen-10 (baseline)`[i],2])
+   suppressWarnings(df$`Kidscreen-10 (follow-up)`[i] <- kidscreen_conversion[kidscreen_conversion[,1] == df$`Kidscreen-10 (follow-up)`[i],2])
 }
 df$`Kidscreen-10 T-values (baseline)` <- 
    (((df$`Kidscreen-10 (baseline)` - 1.2078) / 1.03377) * 10 + 50)
@@ -140,8 +140,8 @@ df_sick$Sygedage_1_POST <- gsub("7\\?","7",df_sick$Sygedage_1_POST)
 df_sick$Sygedage_1_POST <- gsub("2.5\\?","2.5",df_sick$Sygedage_1_POST)
 df_sick$Sygedage_1_POST <- gsub("Ingen sygedage, men mange dage hvor jeg kun havde undervisning noget af dagen","0",df_sick$Sygedage_1_POST)
 
-df_sick$Sygedage_1_SCREEN <- as.numeric(df_sick$Sygedage_1_SCREEN)/30
-df_sick$Sygedage_1_POST <- as.numeric(df_sick$Sygedage_1_POST)/30
+suppressWarnings(df_sick$Sygedage_1_SCREEN <- as.numeric(df_sick$Sygedage_1_SCREEN)/30)
+suppressWarnings(df_sick$Sygedage_1_POST <- as.numeric(df_sick$Sygedage_1_POST)/30)
 
 colnames(df_sick)[2:3] <- c("Sick days (baseline)","Sick days (follow-up)")
 
@@ -248,6 +248,8 @@ df_neq_rest$`NEQ Neg. impact Fac. 5 (Hopelessness) from treatment` <- rowSums(df
 
 df <- merge(df,df_neq_rest,by="Participant Id",all.x=T)
 
+rm(df_neq, df_neq_rest)
+
 ##### SDQ (correct) #####
 df_sdq <- df_raw[df_raw$`Participant Id` < 400,grepl("Participant Id|Group|SDQ_B",colnames(df_raw))]
 
@@ -275,3 +277,9 @@ df$`ECR-RC Anxiety (baseline)` <- rowSums(df_ecrrc[,grepl("_1_|_2_|_3_|_4_|_5_|_
 df$`ECR-RC Avoidance (baseline)` <- (rowSums(df_ecrrc[,grepl("_7_|_8_|_9_",colnames(df_ecrrc))])+24-(rowSums(df_ecrrc[,grepl("_10_|_11_|_12_",colnames(df_ecrrc))])) )/6
 
 rm(df_ecrrc)
+
+#Consollidate group column name
+colnames(df)[1:2] <- c("pt_id","group")
+
+#Completion of follow-up
+df$`Completion of follow-up` <- (!is.na(df$`DSHI-Y (follow-up)`) == TRUE)*1
