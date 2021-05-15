@@ -5,6 +5,10 @@ output:
   pdf_document:
     toc: yes
     toc_depth: '2'
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '2'
   word_document:
     toc: yes
     toc_depth: '2'
@@ -17,23 +21,17 @@ library(kableExtra)
 library(huxtable)
 library(flextable)
 source("functions.R")
-source("import_data.R")
-source("data_handling.R")
+screened <- 100
+n <- 30
 source("sim_data.R")
 
 ```
 
 \newpage
-# Timeline
-
-* 2021-04-07 - Data without feasibility outcomes recieved from TEENS investigators 
-* 2021-04-12 - Data handling script written and validated with TEENS investigators and data with reverse groups sent to other statistician.
-* 2021-04-13 - First report generated where Feasibility figures B and C and WAI-SR is still based on simulated data.
-
-\newpage
 # Baseline characteristics
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+df$Age[4] <- NA
 tbl1_func(df,c("Age"),c("Gender","Nationality","School","Parental status"),"group")
 
 ```
@@ -44,8 +42,8 @@ tbl1_func(df,c("Age"),c("Gender","Nationality","School","Parental status"),"grou
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 3, fig.width = 7, fig.align = "center"}
 
 f1 <- feasibility_outcome(sum(df$`Completion of follow-up`), n, "A) Completion of follow-up", 0.75)
-f2 <- feasibility_outcome(n, screened, "B) *SIM-DATA* Eligible participants who consent to inclusion and randomisation", 0.29)
-f3 <- feasibility_outcome(sum(df$Compliance, na.rm=T), n/2, "C) *SIM-DATA* Compliance", 0.51)
+f2 <- feasibility_outcome(n, screened, "B) Eligible participants who consent to inclusion and randomisation", 0.29)
+f3 <- feasibility_outcome(sum(df$Compliance, na.rm=T), n/2, "C) Compliance", 0.51)
 
 grid.arrange(f1$fig,f2$fig,f3$fig,ncol=1)
 
@@ -75,7 +73,7 @@ result <- lin_reg(df,paste0(var," \\("))
 
 fig_lin_assumptions(result, name=var)
 
-fig_num_cont(df, var, " ", var,"median")
+fig_num_cont(df, var, " ", var,"median")  + labs(tag="A")
 
 temp <- rbind(
    c(var, result$lin_p))
@@ -104,6 +102,8 @@ The results are presented using two scales:
 
 var_a <- "Kidscreen-10"
 var_b <- "Kidscreen-10 T-values"
+
+df[3,grepl(var_b,colnames(df))] <- NA
 
 tbl_cont_func(df,var_a)
 result_a <- lin_reg(df,paste0(var_a," \\("))
@@ -217,23 +217,23 @@ df_to_linreg(data.frame(temp, check.names=F))
 ## DERS-16 (further)
 Data on DERS-16 will be obtained in both groups at baseline and follow-up, and during the intervention for the interventional group. DERS-16 has 16 items which each generates a score from 1 to 5. The results will be presented as one sum-score. The scores in this scale range from 16-80 with higher scores indicating greater emotion regulation difficulties. 
 
-
-
 ### Results
-
-***Due to an error in data collection, only baseline data was collected for DERS-16***
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
 
-tbl_cont_func(df,"DERS-16")
-result <- MWU_test(df,"DERS-16")
+var   <- "DERS-16"
+tbl_cont_func(df,var)
+result <- lin_reg(df,paste0(var," \\("))
+
+fig_lin_assumptions(result, name=var)
+
+fig_num_cont(df, paste0(var," \\("), " ", var,"mean")
 
 temp <- rbind(
-   c("DERS-16", result$est_ci, result$p))
-colnames(temp) <- c(" ","Estimate (95% Confidence interval)","p-value")
+   c(var, result$lin_p))
+colnames(temp) <- c(" ","p-value")
 
-df_to_mwu(data.frame(temp,check.names=F))
-
+df_to_linreg(data.frame(temp, check.names=F))
 
 ```
 
@@ -314,51 +314,26 @@ Data on CCNES-A will be obtained from the parents in both groups at baseline and
 
 ### Results
 
-***The report calculated as if CCNES-A was only collected at follow-up, but linear regression is used since it was collected at both baseline and follow-up***
-
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height = 2, fig.width = 7, fig.align = "center"}
 
-var   <- "CCNES-A "
 tbl_cont_func(df,"CCNES-A ")
-
-var_di <- "CCNES-A Distress reaction"
-var_pu <- "CCNES-A Punitive reactions"
-var_ex <- "CCNES-A Expressive encouragment"
-var_em <- "CCNES-A Emotion-focused reactions"
-var_pr <- "CCNES-A Problem-focused reactions"
-var_mi <- "CCNES-A Minimization reactions"
-
-result_di <- lin_reg(df,paste0(var_di," \\("))
-result_pu <- lin_reg(df,paste0(var_pu," \\("))
-result_ex <- lin_reg(df,paste0(var_ex," \\("))
-result_em <- lin_reg(df,paste0(var_em," \\("))
-result_pr <- lin_reg(df,paste0(var_pr," \\("))
-result_mi <- lin_reg(df,paste0(var_mi," \\("))
-
-fig_lin_assumptions(result_di, name=var_di)
-fig_lin_assumptions(result_pu, name=var_pu)
-fig_lin_assumptions(result_ex, name=var_ex)
-fig_lin_assumptions(result_em, name=var_em)
-fig_lin_assumptions(result_pr, name=var_pr)
-fig_lin_assumptions(result_mi, name=var_mi)
-
-fig_num_cont(df, paste0(var_di," \\("), " ", var_di,"mean")
-fig_num_cont(df, paste0(var_pu," \\("), " ", var_pu,"mean")
-fig_num_cont(df, paste0(var_ex," \\("), " ", var_ex,"mean")
-fig_num_cont(df, paste0(var_em," \\("), " ", var_em,"mean")
-fig_num_cont(df, paste0(var_pr," \\("), " ", var_pr,"mean")
-fig_num_cont(df, paste0(var_mi," \\("), " ", var_mi,"mean")
+result_di <- MWU_test(df,"CCNES-A Distress reaction")
+result_pu <- MWU_test(df,"CCNES-A Punitive reactions")
+result_ex <- MWU_test(df,"CCNES-A Expressive encouragment")
+result_em <- MWU_test(df,"CCNES-A Emotion-focused reactions")
+result_pr <- MWU_test(df,"CCNES-A Problem-focused reactions")
+result_mi <- MWU_test(df,"CCNES-A Minimization reactions")
 
 temp <- rbind(
-   c(var_di, result_di$lin_p),
-   c(var_pu, result_pu$lin_p),
-   c(var_ex, result_ex$lin_p),
-   c(var_em, result_em$lin_p),
-   c(var_pr, result_pr$lin_p),
-   c(var_mi, result_mi$lin_p))
-colnames(temp) <- c(" ","p-value")
+   c("Distress reaction", result_di$est_ci, result_di$p),
+   c("Punitive reactions", result_pu$est_ci, result_pu$p),
+   c("Expressive encouragment", result_ex$est_ci, result_ex$p),
+   c("Emotion-focused reactions", result_em$est_ci, result_em$p),
+   c("Problem-focused reactions", result_pr$est_ci, result_pr$p),
+   c("Minimization reactions", result_mi$est_ci, result_mi$p))
+colnames(temp) <- c(" ","Estimate (95% Confidence interval)","p-value")
 
-df_to_linreg(data.frame(temp, check.names=F))
+df_to_mwu(data.frame(temp,check.names=F))
 
 ```
 
