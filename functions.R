@@ -92,14 +92,21 @@ FitFlextableToPage <- function(ft, pgwidth = 6){
       temp <- quiet(print(tbl1))
       temp <- temp[,c(2,3,1)]
       
+      rownames(temp) <- gsub(" \\(mean \\(SD\\)\\)","",rownames(temp))
       
+      for(i in unique(rownames(temp)[rownames(temp) != "n"])){
+         for(j in c("A","B")){
+            temp[rownames(temp) == i,colnames(temp) == j] <- paste0(temp[rownames(temp) == i,colnames(temp) == j]," [",sum((!is.na(df[df$group == j,colnames(df) == i]))*1),"]")
+         }
+      }
+
+      colnames(temp)[colnames(temp) != "Overall"] <- paste(colnames(temp)[colnames(temp) != "Overall"], "\n mean (SD) [n]")
+            
       tbl1$table <- temp
       tbl1$table <- data.frame(cbind(rownames(tbl1$table),tbl1$table), check.names = F)
       colnames(tbl1$table)[1] <- " "
-      tbl1$missingdata <- round(tbl1$MetaData$percentMissing[tbl1$MetaData$percentMissing > 0],digits=1)
-      tbl1$missingdata <- paste(names(tbl1$missingdata),paste0(tbl1$missingdata,sep=" %"),sep=": ",collapse="; " )
-      
-      tbl1$table <- merge_at(add_footer(merge_h(add_header(flextable(tbl1$table),` `="Summarised results", A="Summarised results" , B="Summarised results", Overall="Summarised results", top=TRUE),part="header"), ` `=paste0("Missing data: ", tbl1$missingdata)),j=1:4,part="footer")
+
+      tbl1$table <- merge_h(add_header(flextable(tbl1$table),` `="Summarised results", `A \n mean (SD) [n]`="Summarised results" , `B \n mean (SD) [n]`="Summarised results", Overall="Summarised results", top=TRUE),part="header")
       
       return(FitFlextableToPage(tbl1$table))
       
@@ -121,14 +128,24 @@ FitFlextableToPage <- function(ft, pgwidth = 6){
       temp <- quiet(print(tbl1))
       temp <- temp[,c(2,3,1)]
       
+      rownames(temp) <- gsub(" \\= 1 \\(\\%\\)","",rownames(temp))
+      
+      for(i in unique(rownames(temp)[rownames(temp) != "n"])){
+         i <- strsplit(i," = ")[[1]][1]
+         for(j in c("A","B")){
+            temp[grepl(i,rownames(temp)),colnames(temp) == j] <- paste0(temp[grepl(i,rownames(temp)),colnames(temp) == j]," [",sum((!is.na(df[df$group == j,grepl(i,colnames(df))]))*1),"]")
+         }
+      }
+      
+      colnames(temp)[colnames(temp) != "Overall"] <- paste(colnames(temp)[colnames(temp) != "Overall"], "\n N (%) [n]")
+      
+      
       
       tbl1$table <- temp
       tbl1$table <- data.frame(cbind(rownames(tbl1$table),tbl1$table), check.names = F)
       colnames(tbl1$table)[1] <- " "
-      tbl1$missingdata <- round(tbl1$MetaData$percentMissing[tbl1$MetaData$percentMissing > 0],digits=1)
-      tbl1$missingdata <- paste(names(tbl1$missingdata),paste0(tbl1$missingdata,sep=" %"),sep=": ",collapse="; " )
       
-      tbl1$table <- merge_at(add_footer(merge_h(add_header(flextable(tbl1$table),` `="Summarised results", A="Summarised results" , B="Summarised results", Overall="Summarised results", top=TRUE),part="header"), ` `=paste0("Missing data: ", tbl1$missingdata)),j=1:4,part="footer")
+      tbl1$table <- merge_h(add_header(flextable(tbl1$table),` `="Summarised results", `A \n N (%) [n]`="Summarised results" , `A \n N (%) [n]`="Summarised results", Overall="Summarised results", top=TRUE))
       
       return(FitFlextableToPage(tbl1$table))
       
