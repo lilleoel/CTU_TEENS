@@ -4,7 +4,7 @@ library(ggplot2)
 library(gridExtra)
 library(Hmisc)
 library(nlme)
-
+library(ggfortify)
 
 
 FitFlextableToPage <- function(ft, pgwidth = 6){
@@ -332,53 +332,9 @@ FitFlextableToPage <- function(ft, pgwidth = 6){
 ###### Assumption-plot ###### 
    fig_lin_assumptions <- function(input, name){
       
-      #Residuals QQ
-      gg_resQQ <- function(LM) { # argument: a linear model  
-         y <- quantile(LM$resid[!is.na(LM$resid)], c(0.25, 0.75))
-         x <- qnorm(c(0.25, 0.75))
-         slope <- diff(y)/diff(x)
-         int <- y[1L] - slope * x[1L]
-         p <- ggplot(LM, aes(sample=.resid)) +
-            stat_qq(alpha = 0.5) +
-            geom_abline(slope = slope, intercept = int, color="blue")
-         
-         return(p)
+      return(autoplot(input$lin_reg, ncol=4)+theme_minimal())
+      
       }
-      
-      var <- input$df
-      a1 <- gg_resQQ(input$lin_reg) + theme_minimal() + ggtitle("Residual QQ-plot") + 
-               theme(plot.title = element_text(hjust=0.5,face="bold",size=10), plot.title.position = "panel",
-                     plot.margin = unit(c(0,0,0,0),"cm"), legend.position = "none")
-      
-      homogein <- data.frame(fitted=fitted(input$lin_reg), residuals=residuals(input$lin_reg))
-      a2 <- ggplot(data=homogein, aes(x=fitted, y=residuals)) +
-            geom_point() +
-            geom_smooth(method="lm",se=F) + theme_minimal() + ggtitle("Homogeneity") +
-            theme( plot.title = element_text(hjust=0.5,face="bold",size=10), plot.title.position = "panel",
-                  plot.margin = unit(c(0,0,0,0),"cm"), legend.position = "none")
-      
-      if(!is.na(input$lin_reg_log)){
-         b1 <- gg_resQQ(input$lin_reg_log) + theme_minimal() + ggtitle("Residual QQ-plot (log)") + 
-                  theme(plot.title = element_text(hjust=0.5,face="bold",size=10), plot.title.position = "panel",
-                     plot.margin = unit(c(0,0,0,0),"cm"), legend.position = "none")
-      
-         homogein <- data.frame(fitted=fitted(input$lin_reg_log), residuals=residuals(input$lin_reg_log))
-         b2 <- ggplot(data=homogein, aes(x=fitted, y=residuals)) +
-            geom_point() +
-            geom_smooth(method="lm",se=F) + theme_minimal() + ggtitle("Homogeneity (log)") +
-            theme( plot.title = element_text(hjust=0.5,face="bold",size=10), plot.title.position = "panel",
-                   plot.margin = unit(c(0,0,0,0),"cm"), legend.position = "none")
-      }else{
-         b1 <- ggplot() + theme_minimal() + ggtitle("Residual QQ-plot (log)") +
-            theme(plot.title = element_text(hjust=0.5,face="bold",size=10), plot.title.position = "panel",
-                  plot.margin = unit(c(0,0,0,0),"cm"), legend.position = "none")
-         b2 <- ggplot() + theme_minimal() + ggtitle("Homogeneity (log)") + 
-            theme(plot.title = element_text(hjust=0.5,face="bold",size=10), plot.title.position = "panel",
-                  plot.margin = unit(c(0,0,0,0),"cm"), legend.position = "none")
-      }
-      
-     return(grid.arrange(a1,a2,b1,b2,ncol=4, top=paste0("Assumptions for linear regression | ",name)))
-   }
    
    #LINEAR REGRESSION
    

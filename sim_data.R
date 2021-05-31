@@ -25,14 +25,13 @@ df$group <- var_rand(n,2)
 #Exploratory secondary clinical outcome -----
 
    #Kidscreen-10
-   df$`Kidscreen-10 (baseline)` <- var_beta(n,-4.327,4.703,"right",digs=2)
-   df$`Kidscreen-10 (follow-up)` <- var_beta(n,-4.327,4.703,"left",digs=2)
-   
    df$`Kidscreen-10 T-values (baseline)` <- 
-      (((df$`Kidscreen-10 (baseline)` - 1.2078) / 1.03377) * 10 + 50)
+      (((var_beta(n,-4.327,4.703,"right",digs=2) - 1.2078) / 1.03377) * 10 + 50)
    df$`Kidscreen-10 T-values (follow-up)` <- 
-      (((df$`Kidscreen-10 (follow-up)` - 1.2078) / 1.03377) * 10 + 50)
+      (((var_beta(n,-4.327,4.703,"left",digs=2) - 1.2078) / 1.03377) * 10 + 50)
 
+   
+   
    #DASS-21
    df$`DASS-21 Depression (baseline)` <- var_sample(n, 0, 21)
    df$`DASS-21 Anxiety (baseline)` <- var_sample(n, 0, 21)
@@ -68,35 +67,9 @@ df$group <- var_rand(n,2)
    df$`CCNES-APP Problem-focused reactions (follow-up)` <- var_norm(n, 3.5, 1,dig=1)
    df$`CCNES-APP Minimization reactions (follow-up)` <- var_norm(n, 3.5, 1,dig=1)
    
-   #CCNES-A (only follow-up)
-   df$`CCNES-A Distress reaction (follow-up)` <- var_norm(n, 3.5, 1,dig=1)
-   df$`CCNES-A Punitive reactions (follow-up)` <- var_norm(n, 3.5, 1,dig=1)
-   df$`CCNES-A Expressive encouragment (follow-up)` <- var_norm(n, 3.5, 1,dig=1)
-   df$`CCNES-A Emotion-focused reactions (follow-up)` <- var_norm(n, 3.5, 1,dig=1)
-   df$`CCNES-A Problem-focused reactions (follow-up)` <- var_norm(n, 3.5, 1,dig=1)
-   df$`CCNES-A Minimization reactions (follow-up)` <- var_norm(n, 3.5, 1,dig=1)
-   
    #NEQ
    df$`NEQ Freq. negative effects  ` <- var_sample(n,0,20)
-   df$`NEQ Freq. negative effects from treatment` <- var_sample(n,0,20) 
-   df$`NEQ Freq. negative effects from other circumstances` <- df$`NEQ Freq. negative effects  `-df$`NEQ Freq. negative effects from treatment`
-   df$`NEQ Freq. Fac. 1 (Symptoms) from treatment` <- var_sample(n,0,8)
-   df$`NEQ Freq. Fac. 2 (Quality) from treatment` <- var_sample(n,0,6)
-   df$`NEQ Freq. Fac. 3 (Dependency) from treatment` <- var_sample(n,0,1)
-   df$`NEQ Freq. Fac. 4 (Stigma) from treatment`  <- var_sample(n,0,2)
-   df$`NEQ Freq. Fac. 5 (Hopelessness) from treatment`  <- var_sample(n,0,3)
-   df$`NEQ Neg. impact from treatment` <- var_sample(n,0,80) 
-   df$`NEQ Neg. impact Fac. 1 (Symptoms) from treatment` <- var_sample(n,0,32)
-   df$`NEQ Neg. impact Fac. 2 (Quality) from treatment`  <- var_sample(n,0,24)
-   df$`NEQ Neg. impact Fac. 3 (Dependency) from treatment` <- var_sample(n,0,4)
-   df$`NEQ Neg. impact Fac. 4 (Stigma) from treatment` <- var_sample(n,0,8)
-   df$`NEQ Neg. impact Fac. 5 (Hopelessness) from treatment` <- var_sample(n,0,12)
-   
-   
-   #WAI-SR (week 4 and 8)
-   df$`WAI-SR (4 weeks)` <- var_sample(n, 12, 84)
-   df$`WAI-SR (8 weeks)` <- var_sample(n, 12, 84)
-   
+ 
    #SDQ (only baseline)
    df$`SDQ Prosocial (baseline)` <- var_sample(n, 0, 10)
    df$`SDQ Emotion (baseline)` <- var_sample(n, 0, 10)
